@@ -1,0 +1,3 @@
+[submodule "python-cmake-buildsystem"]
+	path = app/python-cmake-buildsystem
+	url = https://gitlab.aldebaran.lan/life/python-cmake-buildsystem.git

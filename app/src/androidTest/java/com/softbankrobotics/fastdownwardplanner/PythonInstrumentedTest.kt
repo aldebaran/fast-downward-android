@@ -8,9 +8,6 @@ import org.junit.runner.RunWith
 
 import org.junit.Assert.*
 import org.junit.Before
-import org.python.core.Options
-import org.python.core.PySystemState
-import org.python.util.PythonInterpreter
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -27,24 +24,24 @@ class PythonInstrumentedTest {
         assertEquals("com.softbankrobotics.fastdownwardplanner", appContext.packageName)
     }
 
-    private lateinit var python: PythonInterpreter
-
     @Before
     fun createPythonInterpreter() {
-        val pythonConfig = PySystemState()
-        Options.importSite = false
-        python = PythonInterpreter(null, pythonConfig)
+//        val pythonConfig = PySystemState()
+//        Options.importSite = false
+//        python = PythonInterpreter(null, pythonConfig)
     }
 
     @Test
     fun canRunPythonHelloWorld() {
-        python.exec("print('Hello Python World!')")
-        python.exec("import sys")
-        python.exec("print(sys.path)")
+        System.loadLibrary("native-lib");
+        helloPython()
+//        python.exec("print('Hello Python World!')")
+//        python.exec("import sys")
+//        python.exec("print(sys.path)")
     }
 
     @Test
     fun canFindFastDownwardTranslate() {
-        python.exec("import translate")
+//        python.exec("import translate")
     }
 }

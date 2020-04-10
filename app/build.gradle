@@ -6,25 +6,42 @@ android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
 
-    dependencies {
-        implementation 'androidx.multidex:multidex:2.0.1'
-    }
-
     defaultConfig {
         applicationId "com.softbankrobotics.fastdownwardplanner"
-        minSdkVersion 16
+        minSdkVersion 23
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
 
-        multiDexEnabled true
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        externalNativeBuild {
+            cmake {
+                // Note that there are two "cmake" blocks,
+                // see https://stackoverflow.com/questions/47370186/could-not-find-method-cppflags-arguments-for-arguments
+                arguments "-DCMAKE_CROSSCOMPILING_EMULATOR=${new File("app/python-cmake-buildsystem/run_on_android.sh").absolutePath}",
+                        "-DANDROID_ALLOW_UNDEFINED_SYMBOLS=ON",
+                        "-DBUILD_SHARED_LIBS=ON",
+                        "-DENABLE_CTYPES=OFF",
+                        "-DENABLE_DECIMAL=OFF",
+                        "-DINSTALL_MANUAL=OFF",
+                        "-DINSTALL_TEST=OFF",
+                        "-DINSTALL_DEVELOPMENT=OFF",
+                        "-DWITH_DOC_STRINGS=OFF",
+                        "-DWITH_THREAD=OFF"
+            }
+        }
     }
 
     compileOptions {
+        // Declares the need for Java 8 features.
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // For Kotlin projects
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 
     buildTypes {
@@ -34,16 +51,44 @@ android {
         }
     }
 
+    externalNativeBuild {
+        cmake {
+            // Note that there are two "cmake" blocks,
+            // see https://stackoverflow.com/questions/47370186/could-not-find-method-cppflags-arguments-for-arguments
+            path file('CMakeLists.txt')
+        }
+    }
+
+    splits {
+        // Configures multiple APKs based on ABI.
+        abi {
+
+            // Enables building multiple APKs per ABI.
+            enable true
+
+            // By default all ABIs are included, so use reset() and include to specify that we only
+            // want APKs for x86 and x86_64.
+
+            // Resets the list of ABIs that Gradle should create APKs for to none.
+            reset()
+
+            // Specifies a list of ABIs that Gradle should create APKs for.
+            include /*"x86_64",*/ "armeabi-v7a"
+
+            // Specifies that we do not want to also generate a universal APK that includes all ABIs.
+            universalApk false
+        }
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.core:core-ktx:1.2.0'
-    implementation 'org.python:jython-standalone:2.7.1'
-//    implementation 'org.python:jython-slim:2.7.2'
-    testImplementation 'junit:junit:4.12'
+
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
