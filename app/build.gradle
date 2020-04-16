@@ -17,13 +17,15 @@ android {
 
         externalNativeBuild {
             cmake {
-                // Note that there are two "cmake" blocks,
+                // Note that there are two `cmake` blocks,
                 // see https://stackoverflow.com/questions/47370186/could-not-find-method-cppflags-arguments-for-arguments
                 arguments "-DCMAKE_CROSSCOMPILING_EMULATOR=${new File("app/python-cmake-buildsystem/run_on_android.sh").absolutePath}",
                         "-DANDROID_ALLOW_UNDEFINED_SYMBOLS=ON",
                         "-DBUILD_SHARED_LIBS=ON",
                         "-DENABLE_CTYPES=OFF",
                         "-DENABLE_DECIMAL=OFF",
+                        "-DENABLE_GRP=OFF",
+                        "-DBUILD_EXTENSIONS_AS_BUILTIN=ON",
                         "-DINSTALL_MANUAL=OFF",
                         "-DINSTALL_TEST=OFF",
                         "-DINSTALL_DEVELOPMENT=OFF",
@@ -53,7 +55,7 @@ android {
 
     externalNativeBuild {
         cmake {
-            // Note that there are two "cmake" blocks,
+            // Note that there are two `cmake` blocks,
             // see https://stackoverflow.com/questions/47370186/could-not-find-method-cppflags-arguments-for-arguments
             path file('CMakeLists.txt')
         }
@@ -66,8 +68,7 @@ android {
             // Enables building multiple APKs per ABI.
             enable true
 
-            // By default all ABIs are included, so use reset() and include to specify that we only
-            // want APKs for x86 and x86_64.
+            // By default all ABIs are included, so use reset() and include to specify our selection.
 
             // Resets the list of ABIs that Gradle should create APKs for to none.
             reset()
@@ -91,4 +92,5 @@ dependencies {
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation 'com.android.support.test:rules:1.0.2'
 }

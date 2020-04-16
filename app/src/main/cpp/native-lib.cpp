@@ -3,6 +3,27 @@
 #include <string>
 #include <jni.h>
 #include <Python.h>
+#include <planner.h>
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_softbankrobotics_fastdownwardplanner_PythonKt_initCPython(
+        JNIEnv *env, jclass clazz, jstring path) {
+
+    const char* cpath = env->GetStringUTFChars(path, nullptr);
+    wchar_t* wpath = Py_DecodeLocale(cpath, nullptr);
+    Py_SetPythonHome(wpath);
+    Py_SetPath(wpath);
+    Py_NoSiteFlag = 1;
+    Py_Initialize();
+
+    auto sys = PyImport_ImportModule("sys");
+    auto sys_path = PyObject_GetAttrString(sys, "path");
+    auto sys_path_str = PyObject_Repr(sys_path);
+    auto sys_path_cstr = PyUnicode_AsUTF8(sys_path_str);
+
+    return env->NewStringUTF(sys_path_cstr);
+}
 
 namespace {
     /**
@@ -28,9 +49,141 @@ namespace {
     }
 }
 
+/** Check Python result and forward Python exception if absent (we assume there is always). */
+#define CONFIRM_RESULT_OR_THROW(jni, result) \
+    if (!result) { forward_python_exception_to_jni(jni); return nullptr; }
+
+/** Make sure we dereference some newly produced reference of a Python result. */
+#define MANAGE_RESULT(result) \
+    auto _ ## result ## _ref = make_disposable([&]{ Py_DecRef(result); })
+
+/** Combo: check Python result or throw, and manage the reference of a Python result. */
+#define MANAGE_RESULT_OR_THROW(jni, result) \
+    CONFIRM_RESULT_OR_THROW(jni, result); \
+    MANAGE_RESULT(result)
+
+/**
+ * Retrieves the current Python exception and translates it in a JNI exception.
+ * In JNI, the exception is not directly thrown from C++.
+ * Instead, the C++ should return a null result after having the JNI exception is set.
+ * @param jni
+ */
+void forward_python_exception_to_jni(JNIEnv* jni) {
+    const char* error_message;
+    if (PyErr_Occurred()) {
+        // Retrieve the exception info.
+        PyObject* type = nullptr;
+        PyObject* value = nullptr;
+        PyObject* traceback = nullptr;
+        PyErr_Fetch(&type, &value, &traceback);
+        PyErr_NormalizeException(&type, &value, &traceback);
+        MANAGE_RESULT(type);
+        MANAGE_RESULT(value);
+        MANAGE_RESULT(traceback);
+
+        PyObject* formatted_exception = nullptr;
+        if (traceback) {
+            // When the traceback is available,
+            // we can use the `traceback` module to get a nice report.
+            PyObject* traceback_module = PyImport_ImportModule("traceback");
+            assert(traceback_module);
+            MANAGE_RESULT(traceback_module);
+            PyObject* format_exception = PyObject_GetAttrString(traceback_module, "format_exception");
+            assert(format_exception);
+            MANAGE_RESULT(format_exception);
+
+            // Format function takes the exception info as arguments.
+            PyObject* format_exception_args = PyTuple_New(3);
+            MANAGE_RESULT(format_exception_args);
+            PyTuple_SetItem(format_exception_args, 0, type);
+            PyTuple_SetItem(format_exception_args, 1, value);
+            PyTuple_SetItem(format_exception_args, 2, traceback);
+
+            formatted_exception = PyObject_Call(format_exception, format_exception_args, nullptr);
+        } else {
+            // When the traceback is absent, the report consists in showing the exception.
+            formatted_exception = PyObject_Repr(value);
+        }
+        MANAGE_RESULT(formatted_exception);
+        error_message = PyUnicode_AsUTF8(formatted_exception);
+    } else {
+        error_message = "attempting to handle a Python exception that is absent";
+    }
+
+    jni->ThrowNew(jni->FindClass("java/lang/RuntimeException"), error_message);
+}
+
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_com_softbankrobotics_fastdownwardplanner_NativeKt_searchPlanFromSAS(
+Java_com_softbankrobotics_fastdownwardplanner_PythonKt_execCPython(
+        JNIEnv *env, jclass clazz, jstring j_script) {
+
+    // Convert the passed string arguments to C strings.
+    const char* c_script = env->GetStringUTFChars(j_script, 0);
+
+    // Make sure we drop a reference to the passed arguments after they are used.
+    auto string_args_references = make_disposable([&] {
+        env->ReleaseStringUTFChars(j_script, c_script);
+    });
+
+    static PyObject* globals = PyDict_New();
+
+    PyObject* code = Py_CompileString(c_script, "<jni>", Py_eval_input);
+    MANAGE_RESULT_OR_THROW(env, code);
+
+    PyObject* result = PyEval_EvalCode(code, globals, globals);
+    MANAGE_RESULT_OR_THROW(env, result);
+
+    auto result_as_py_str = PyObject_Repr(result);
+    MANAGE_RESULT_OR_THROW(env, result_as_py_str);
+
+    auto result_as_c_str = PyUnicode_AsUTF8(result_as_py_str);
+    return env->NewStringUTF(result_as_c_str);
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_translatePDDLToSAS(
+        JNIEnv *env, jclass /*clazz*/, jstring j_domain, jstring j_problem) {
+
+    // Convert the passed string arguments to C strings.
+    const char* c_domain = env->GetStringUTFChars(j_domain, 0);
+    const char* c_problem = env->GetStringUTFChars(j_problem, 0);
+
+    // Make sure we drop a reference to the passed arguments after they are used.
+    auto string_args_references = make_disposable([&] {
+        env->ReleaseStringUTFChars(j_domain, c_domain);
+        env->ReleaseStringUTFChars(j_problem, c_problem);
+    });
+
+    // Finding the translation function written in Python.
+    PyObject* translate_module = PyImport_ImportModule("translate");
+    MANAGE_RESULT_OR_THROW(env, translate_module);
+    PyObject* translate_function = PyObject_GetAttrString(translate_module, "translate_from_strings");
+    MANAGE_RESULT_OR_THROW(env, translate_function);
+
+    // Preparing arguments by converting them to Python objects.
+    PyObject* translate_args = PyTuple_New(2);
+
+    PyObject* py_domain = PyUnicode_DecodeFSDefault(c_domain);
+    MANAGE_RESULT_OR_THROW(env, py_domain);
+    PyTuple_SetItem(translate_args, 0, py_domain);
+
+    PyObject* py_problem = PyUnicode_DecodeFSDefault(c_problem);
+    MANAGE_RESULT_OR_THROW(env, py_problem);
+    PyTuple_SetItem(translate_args, 1, py_problem);
+
+    // Performing the translation.
+    PyObject* py_sas = PyObject_Call(translate_function, translate_args, nullptr);
+    MANAGE_RESULT_OR_THROW(env, py_sas);
+
+    char* c_sas = PyUnicode_AsUTF8(py_sas);
+    return env->NewStringUTF(c_sas);
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_searchPlanFromSAS(
         JNIEnv *env, jclass /*clazz*/, jstring sas_problem, jstring search_strategy) {
 
     // Convert the passed string arguments to C strings.
@@ -45,7 +198,7 @@ Java_com_softbankrobotics_fastdownwardplanner_NativeKt_searchPlanFromSAS(
 
     // Perform the planning.
     try {
-        std::string plan = "salut monde!";//plan_from_sas(sas, strategy);
+        std::string plan = plan_from_sas(sas, strategy);
         return env->NewStringUTF(plan.c_str());
     } catch (const std::exception& e) {
         env->ThrowNew(env->FindClass("java/lang/RuntimeException"), e.what());
@@ -53,23 +206,11 @@ Java_com_softbankrobotics_fastdownwardplanner_NativeKt_searchPlanFromSAS(
     }
 }
 
-//extern "C"
-//JNIEXPORT jstring JNICALL
-//Java_com_softbankrobotics_fastdownwardplanner_NativeKt_translatePDDLtoSAS(
-//        JNIEnv *env, jclass /*clazz*/, jstring pddl) {
-//
-//    Py_Initialize();
-//    PyRun_SimpleString("from time import time,ctime\n"
-//                       "print 'Today is',ctime(time())\n");
-//    Py_Finalize();
-//}
-
 extern "C"
-JNIEXPORT void JNICALL
-Java_com_softbankrobotics_fastdownwardplanner_NativeKt_helloPython(
-        JNIEnv *env, jclass /*clazz*/) {
-
-    Py_Initialize();
-    PyRun_SimpleString("print('Hello, world!')");
-    Py_Finalize();
+JNIEXPORT jstring JNICALL
+Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_searchPlan(
+        JNIEnv *env, jclass clazz, jstring domain, jstring problem, jstring strategy) {
+    // TODO: can be optimized by avoiding conversion between C++ and Java.
+    auto sas = Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_translatePDDLToSAS(env, clazz, domain, problem);
+    return Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_searchPlanFromSAS(env, clazz, sas, strategy);
 }

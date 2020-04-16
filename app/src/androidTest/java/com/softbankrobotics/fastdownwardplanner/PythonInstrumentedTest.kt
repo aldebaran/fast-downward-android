@@ -1,13 +1,14 @@
 package com.softbankrobotics.fastdownwardplanner
 
-import androidx.test.platform.app.InstrumentationRegistry
+import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
-
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 
-import org.junit.Assert.*
-import org.junit.Before
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -17,31 +18,37 @@ import org.junit.Before
 @RunWith(AndroidJUnit4::class)
 class PythonInstrumentedTest {
 
-    @Before
-    fun useAppContext() {
-        // Context of the app under test.
-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.softbankrobotics.fastdownwardplanner", appContext.packageName)
-    }
+    companion object {
+        private lateinit var context: Context
 
-    @Before
-    fun createPythonInterpreter() {
-//        val pythonConfig = PySystemState()
-//        Options.importSite = false
-//        python = PythonInterpreter(null, pythonConfig)
-    }
-
-    @Test
-    fun canRunPythonHelloWorld() {
-        System.loadLibrary("native-lib");
-        helloPython()
-//        python.exec("print('Hello Python World!')")
-//        python.exec("import sys")
-//        python.exec("print(sys.path)")
+        @BeforeClass
+        @JvmStatic
+        fun contextAndPython() {
+            // Context of the app under test.
+            context = InstrumentationRegistry.getInstrumentation().targetContext
+            assertEquals("com.softbankrobotics.fastdownwardplanner", context.packageName)
+            initializePython(context)
+        }
     }
 
     @Test
-    fun canFindFastDownwardTranslate() {
-//        python.exec("import translate")
+    fun execHelloWorld() {
+        val hello = "'Hello, world!'"
+        val result = execPython(hello)
+        assertEquals(hello, result)
+    }
+
+    @Test
+    fun importBuiltinModule() {
+        execPython("import sys")
+        val result = execPython("sys")
+        assertTrue(result.isNotEmpty())
+    }
+
+    @Test
+    fun importThirdPartyModule() {
+        execPython("import translate")
+        val result = execPython("translate")
+        assertTrue(result.isNotEmpty())
     }
 }
