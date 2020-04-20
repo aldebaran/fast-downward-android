@@ -19,18 +19,39 @@ android {
             cmake {
                 // Note that there are two `cmake` blocks,
                 // see https://stackoverflow.com/questions/47370186/could-not-find-method-cppflags-arguments-for-arguments
-                arguments "-DCMAKE_CROSSCOMPILING_EMULATOR=${new File("app/python-cmake-buildsystem/run_on_android.sh").absolutePath}",
-                        "-DANDROID_ALLOW_UNDEFINED_SYMBOLS=ON",
-                        "-DBUILD_SHARED_LIBS=ON",
-                        "-DENABLE_CTYPES=OFF",
-                        "-DENABLE_DECIMAL=OFF",
-                        "-DENABLE_GRP=OFF",
-                        "-DBUILD_EXTENSIONS_AS_BUILTIN=ON",
+                // Many CMake definitions are needed to build Python "just right".
+                arguments "-DBUILD_SHARED_LIBS=ON", // Build it a shared library. TODO: can we build it as static?
+                        "-DBUILD_EXTENSIONS_AS_BUILTIN=ON", // Have the extensions built in the library.
+                        "-DANDROID_ALLOW_UNDEFINED_SYMBOLS=ON", // Required because of how Python builds its extensions.
+
+                        // Remove content or features we do not need.
                         "-DINSTALL_MANUAL=OFF",
                         "-DINSTALL_TEST=OFF",
                         "-DINSTALL_DEVELOPMENT=OFF",
                         "-DWITH_DOC_STRINGS=OFF",
-                        "-DWITH_THREAD=OFF"
+                        "-DWITH_THREAD=OFF",
+
+                        // Disable some Python extensions that are not supported.
+                        "-DENABLE_CTYPES=OFF",
+                        "-DENABLE_DECIMAL=OFF",
+                        "-DENABLE_GRP=OFF",
+
+                        // KLUDGE: we assume some properties of the target platform to avoid running
+                        // programs on it to deduce them. They could be wrong!
+                        "-DX87_DOUBLE_ROUNDING=OFF",
+                        "-DTANH_PRESERVES_ZERO_SIGN=ON",
+                        "-DLOG1P_DROPS_ZERO_SIGN=ON",
+                        "-DPOSIX_SEMAPHORES_NOT_ENABLED=ON",
+                        "-DHAVE_BROKEN_SEM_GETVALUE=ON",
+                        "-DHAVE_BROKEN_NICE=OFF",
+                        "-DHAVE_BROKEN_POLL=OFF",
+                        "-DHAVE_WORKING_TZSET=ON",
+                        "-DHAVE_ALIGNED_REQUIRED=ON",
+                        "-DHAVE_BROKEN_MBSTOWCS=OFF",
+                        "-DHAVE_COMPUTED_GOTOS=OFF",
+                        "-DHAVE_GLIBC_MEMMOVE_BUG=OFF",
+                        "-DHAVE_LONG_LONG_FORMAT=ON",
+                        "-DHAVE_SIZE_T_FORMAT=ON"
             }
         }
     }
@@ -74,7 +95,7 @@ android {
             reset()
 
             // Specifies a list of ABIs that Gradle should create APKs for.
-            include "x86", "x86_64", "armeabi-v7a"
+            include "x86", /*"x86_64",*/ "armeabi-v7a"
 
             // Specifies that we do not want to also generate a universal APK that includes all ABIs.
             universalApk false
