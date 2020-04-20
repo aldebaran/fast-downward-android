@@ -17,7 +17,7 @@ project("FastDownwardAndroid")
 # TODO: let the Python version be an option.
 add_subdirectory(python-cmake-buildsystem)
 include_directories(
-        "python-cmake-buildsystem/Python-3.6.7/Include"
+        "${CMAKE_CURRENT_BINARY_DIR}/Python-3.6.7/Include"
         "${CMAKE_CURRENT_BINARY_DIR}/python-cmake-buildsystem/bin")
 set(PYTHON_IN_CMAKE_CURRENT_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/python-cmake-buildsystem/lib/python3.6")
 
