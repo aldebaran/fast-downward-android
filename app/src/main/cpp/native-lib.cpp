@@ -212,5 +212,9 @@ Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_searchPlan(
         JNIEnv *env, jclass clazz, jstring domain, jstring problem, jstring strategy) {
     // TODO: can be optimized by avoiding conversion between C++ and Java.
     auto sas = Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_translatePDDLToSAS(env, clazz, domain, problem);
+    if (!sas) {
+        // A JNI error should already be propagating.
+        return nullptr;
+    }
     return Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_searchPlanFromSAS(env, clazz, sas, strategy);
 }
