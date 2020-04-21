@@ -49,18 +49,9 @@ namespace {
     }
 }
 
-/** Check Python result and forward Python exception if absent (we assume there is always). */
-#define CONFIRM_RESULT_OR_THROW(jni, result) \
-    if (!result) { forward_python_exception_to_jni(jni); return nullptr; }
-
 /** Make sure we dereference some newly produced reference of a Python result. */
 #define MANAGE_RESULT(result) \
     auto _ ## result ## _ref = make_disposable([&]{ Py_DecRef(result); })
-
-/** Combo: check Python result or throw, and manage the reference of a Python result. */
-#define MANAGE_RESULT_OR_THROW(jni, result) \
-    CONFIRM_RESULT_OR_THROW(jni, result); \
-    MANAGE_RESULT(result)
 
 /**
  * Retrieves the current Python exception and translates it in a JNI exception.
@@ -69,7 +60,7 @@ namespace {
  * @param jni
  */
 void forward_python_exception_to_jni(JNIEnv* jni) {
-    const char* error_message;
+    std::string error_message;
     if (PyErr_Occurred()) {
         // Retrieve the exception info.
         PyObject* type = nullptr;
@@ -77,11 +68,11 @@ void forward_python_exception_to_jni(JNIEnv* jni) {
         PyObject* traceback = nullptr;
         PyErr_Fetch(&type, &value, &traceback);
         PyErr_NormalizeException(&type, &value, &traceback);
+        assert(value);
         MANAGE_RESULT(type);
         MANAGE_RESULT(value);
         MANAGE_RESULT(traceback);
 
-        PyObject* formatted_exception = nullptr;
         if (traceback) {
             // When the traceback is available,
             // we can use the `traceback` module to get a nice report.
@@ -99,19 +90,42 @@ void forward_python_exception_to_jni(JNIEnv* jni) {
             PyTuple_SetItem(format_exception_args, 1, value);
             PyTuple_SetItem(format_exception_args, 2, traceback);
 
-            formatted_exception = PyObject_Call(format_exception, format_exception_args, nullptr);
-        } else {
-            // When the traceback is absent, the report consists in showing the exception.
-            formatted_exception = PyObject_Repr(value);
+            PyObject* formatted_exception = PyObject_Call(format_exception, format_exception_args, nullptr);
+            MANAGE_RESULT(formatted_exception);
+            const char* c_formatted_exception = PyUnicode_AsUTF8(formatted_exception);
+            if (c_formatted_exception) {
+                error_message = c_formatted_exception;
+            }
         }
-        MANAGE_RESULT(formatted_exception);
-        error_message = PyUnicode_AsUTF8(formatted_exception);
+
+        if (error_message.empty()) {
+            // When the traceback is absent or if formatting exception went wrong,
+            // the report consists in showing the exception.
+            PyObject* value_str = PyObject_Str(value);
+            MANAGE_RESULT(value_str);
+            const char* c_value_str = PyUnicode_AsUTF8(value_str);
+            if (c_value_str)
+                error_message = c_value_str;
+        }
+
+        if (error_message.empty()) {
+            error_message = "unknown Python exception";
+        }
     } else {
         error_message = "attempting to handle a Python exception that is absent";
     }
 
-    jni->ThrowNew(jni->FindClass("java/lang/RuntimeException"), error_message);
+    jni->ThrowNew(jni->FindClass("java/lang/RuntimeException"), error_message.c_str());
 }
+
+/** Check Python result and forward Python exception if absent (we assume there is always). */
+#define CONFIRM_RESULT_OR_THROW(jni, result) \
+    if (!result) { forward_python_exception_to_jni(jni); return nullptr; }
+
+/** Combo: check Python result or throw, and manage the reference of a Python result. */
+#define MANAGE_RESULT_OR_THROW(jni, result) \
+    CONFIRM_RESULT_OR_THROW(jni, result); \
+    MANAGE_RESULT(result)
 
 extern "C"
 JNIEXPORT jstring JNICALL
