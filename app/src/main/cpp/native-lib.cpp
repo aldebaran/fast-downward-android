@@ -178,6 +178,7 @@ Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_translatePDDLToSAS(
 
     // Preparing arguments by converting them to Python objects.
     PyObject* translate_args = PyTuple_New(2);
+    MANAGE_RESULT_OR_THROW(env, translate_args);
 
     PyObject* py_domain = PyUnicode_DecodeFSDefault(c_domain);
     MANAGE_RESULT_OR_THROW(env, py_domain);
@@ -191,8 +192,11 @@ Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_translatePDDLToSAS(
     PyObject* py_sas = PyObject_Call(translate_function, translate_args, nullptr);
     MANAGE_RESULT_OR_THROW(env, py_sas);
 
+    // Copying the result, JNI handles the memory.
     char* c_sas = PyUnicode_AsUTF8(py_sas);
-    return env->NewStringUTF(c_sas);
+    char* c_sas_copy = new char[strlen(c_sas) + 1]; // +1 to accomodate for the null terminator
+    strcpy(c_sas_copy, c_sas);
+    return env->NewStringUTF(c_sas_copy);
 }
 
 extern "C"
