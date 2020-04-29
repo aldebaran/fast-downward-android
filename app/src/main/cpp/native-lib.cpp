@@ -1,29 +1,8 @@
-#include <iostream>
-#include <list>
+#include "native-lib.h"
 #include <string>
 #include <jni.h>
 #include <Python.h>
 #include <planner.h>
-
-extern "C"
-JNIEXPORT jstring JNICALL
-Java_com_softbankrobotics_fastdownwardplanner_PythonKt_initCPython(
-        JNIEnv *env, jclass clazz, jstring path) {
-
-    const char* cpath = env->GetStringUTFChars(path, nullptr);
-    wchar_t* wpath = Py_DecodeLocale(cpath, nullptr);
-    Py_SetPythonHome(wpath);
-    Py_SetPath(wpath);
-    Py_NoSiteFlag = 1;
-    Py_Initialize();
-
-    auto sys = PyImport_ImportModule("sys");
-    auto sys_path = PyObject_GetAttrString(sys, "path");
-    auto sys_path_str = PyObject_Repr(sys_path);
-    auto sys_path_cstr = PyUnicode_AsUTF8(sys_path_str);
-
-    return env->NewStringUTF(sys_path_cstr);
-}
 
 namespace {
     /**
@@ -49,9 +28,32 @@ namespace {
     }
 }
 
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_softbankrobotics_fastdownwardplanner_PythonKt_initCPython(
+        JNIEnv *env, jclass /*clazz*/, jstring j_path) {
+
+    const char* c_path = env->GetStringUTFChars(j_path, nullptr);
+    auto c_path_reference = make_disposable([&] {
+        env->ReleaseStringUTFChars(j_path, c_path);
+    });
+    wchar_t* c_w_path = Py_DecodeLocale(c_path, nullptr);
+    Py_SetPythonHome(c_w_path);
+    Py_SetPath(c_w_path);
+    Py_NoSiteFlag = 1;
+    Py_Initialize();
+
+    auto sys = PyImport_ImportModule("sys");
+    auto sys_path = PyObject_GetAttrString(sys, "path");
+    auto sys_path_str = PyObject_Repr(sys_path);
+    auto sys_path_cstr = PyUnicode_AsUTF8(sys_path_str);
+
+    return env->NewStringUTF(sys_path_cstr);
+}
+
 /** Make sure we dereference some newly produced reference of a Python result. */
 #define MANAGE_RESULT(result) \
-    auto _ ## result ## _ref = make_disposable([&]{ Py_DecRef(result); })
+    auto _ ## result ## _ref = make_disposable([=]{ Py_DecRef(result); })
 
 /**
  * Retrieves the current Python exception and translates it in a JNI exception.
@@ -69,9 +71,6 @@ void forward_python_exception_to_jni(JNIEnv* jni) {
         PyErr_Fetch(&type, &value, &traceback);
         PyErr_NormalizeException(&type, &value, &traceback);
         assert(value);
-        MANAGE_RESULT(type);
-        MANAGE_RESULT(value);
-        MANAGE_RESULT(traceback);
 
         if (traceback) {
             // When the traceback is available,
@@ -106,6 +105,12 @@ void forward_python_exception_to_jni(JNIEnv* jni) {
             const char* c_value_str = PyUnicode_AsUTF8(value_str);
             if (c_value_str)
                 error_message = c_value_str;
+        }
+
+        if (!traceback) {
+            Py_DecRef(type);
+            Py_DecRef(value);
+            Py_DecRef(traceback);
         }
 
         if (error_message.empty()) {
@@ -161,8 +166,8 @@ Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_translatePDDLToSAS(
         JNIEnv *env, jclass /*clazz*/, jstring j_domain, jstring j_problem) {
 
     // Convert the passed string arguments to C strings.
-    const char* c_domain = env->GetStringUTFChars(j_domain, 0);
-    const char* c_problem = env->GetStringUTFChars(j_problem, 0);
+    const char* c_domain = env->GetStringUTFChars(j_domain, nullptr);
+    const char* c_problem = env->GetStringUTFChars(j_problem, nullptr);
 
     // Make sure we drop a reference to the passed arguments after they are used.
     auto string_args_references = make_disposable([&] {
@@ -181,11 +186,11 @@ Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_translatePDDLToSAS(
     MANAGE_RESULT_OR_THROW(env, translate_args);
 
     PyObject* py_domain = PyUnicode_DecodeFSDefault(c_domain);
-    MANAGE_RESULT_OR_THROW(env, py_domain);
+    CONFIRM_RESULT_OR_THROW(env, py_domain);
     PyTuple_SetItem(translate_args, 0, py_domain);
 
     PyObject* py_problem = PyUnicode_DecodeFSDefault(c_problem);
-    MANAGE_RESULT_OR_THROW(env, py_problem);
+    CONFIRM_RESULT_OR_THROW(env, py_problem);
     PyTuple_SetItem(translate_args, 1, py_problem);
 
     // Performing the translation.
@@ -205,8 +210,8 @@ Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_searchPlanFromSAS(
         JNIEnv *env, jclass /*clazz*/, jstring sas_problem, jstring search_strategy) {
 
     // Convert the passed string arguments to C strings.
-    const char* sas = env->GetStringUTFChars(sas_problem, 0);
-    const char* strategy = env->GetStringUTFChars(search_strategy, 0);
+    const char* sas = env->GetStringUTFChars(sas_problem, nullptr);
+    const char* strategy = env->GetStringUTFChars(search_strategy, nullptr);
 
     // Make sure we drop a reference to the passed arguments after they are used.
     auto string_args_references = make_disposable([&] {
