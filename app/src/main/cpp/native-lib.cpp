@@ -185,11 +185,11 @@ Java_com_softbankrobotics_fastdownwardplanner_FastDownwardKt_translatePDDLToSAS(
     PyObject* translate_args = PyTuple_New(2);
     MANAGE_RESULT_OR_THROW(env, translate_args);
 
-    PyObject* py_domain = PyUnicode_DecodeFSDefault(c_domain);
+    PyObject* py_domain = PyUnicode_DecodeLocale(c_domain, "surrogateescape");
     CONFIRM_RESULT_OR_THROW(env, py_domain);
     PyTuple_SetItem(translate_args, 0, py_domain);
 
-    PyObject* py_problem = PyUnicode_DecodeFSDefault(c_problem);
+    PyObject* py_problem = PyUnicode_DecodeLocale(c_problem, "surrogateescape");
     CONFIRM_RESULT_OR_THROW(env, py_problem);
     PyTuple_SetItem(translate_args, 1, py_problem);
 
