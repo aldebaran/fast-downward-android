@@ -18,7 +18,6 @@ class FastDownwardInstrumentedTest {
             // Context of the app under test.
             context = InstrumentationRegistry.getInstrumentation().targetContext
             Assert.assertEquals("com.softbankrobotics.fastdownwardplanner", context.packageName)
-            initializePython(context)
         }
 
         fun stringFromRawResourceName(resourceName: String): String {

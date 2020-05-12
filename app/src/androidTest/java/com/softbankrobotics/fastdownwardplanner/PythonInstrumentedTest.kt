@@ -27,7 +27,6 @@ class PythonInstrumentedTest {
             // Context of the app under test.
             context = InstrumentationRegistry.getInstrumentation().targetContext
             assertEquals("com.softbankrobotics.fastdownwardplanner", context.packageName)
-            initializePython(context)
         }
     }
 
