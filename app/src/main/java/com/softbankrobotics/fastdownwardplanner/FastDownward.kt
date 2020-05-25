@@ -20,3 +20,10 @@ fun searchPlan(domain: String, problem: String): String {
         line.substring(1, line.length-1)
     }.filterNotNull().joinToString("\n")
 }
+
+/** Splits PDDL content into a domain and a problem. */
+fun splitDomainAndProblem(pddlContent: String): Pair<String, String> {
+    val domain = pddlContent.substringBeforeLast("(define ")
+    val problem = pddlContent.substring(domain.length)
+    return Pair(domain, problem)
+}
