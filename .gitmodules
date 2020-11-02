@@ -1,6 +1,6 @@
-[submodule "app/python-cmake-buildsystem"]
-	path = app/python-cmake-buildsystem
+[submodule "library/python-cmake-buildsystem"]
+	path = library/python-cmake-buildsystem
 	url = git@gitlab.aldebaran.lan:life/python-cmake-buildsystem.git
-[submodule "app/fast-downward"]
-	path = app/fast-downward
+[submodule "library/fast-downward"]
+	path = library/fast-downward
 	url = git@gitlab.aldebaran.lan:life/fast-downward.git

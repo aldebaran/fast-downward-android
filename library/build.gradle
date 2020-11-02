@@ -1,0 +1,107 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.3"
+    ndkVersion "$ndk_version"
+
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+
+        externalNativeBuild {
+            // Note that there are two `cmake` blocks,
+            // see https://stackoverflow.com/questions/47370186/could-not-find-method-cppflags-arguments-for-arguments
+            cmake {
+                targets "python-jni", "fast-downward-jni"
+
+                // Many CMake definitions are needed to build Python "just right".
+                arguments "-DBUILD_EXTENSIONS_AS_BUILTIN=ON", // Have the extensions built in the Python library.
+                        "-DANDROID_ALLOW_UNDEFINED_SYMBOLS=ON", // Required because of how Python builds its extensions.
+
+                        // Remove content or features we do not need.
+                        "-DINSTALL_MANUAL=OFF",
+                        "-DINSTALL_TEST=OFF",
+                        "-DINSTALL_DEVELOPMENT=OFF",
+                        "-DWITH_DOC_STRINGS=OFF",
+
+                        // Disable some Python extensions that are not supported.
+                        "-DENABLE_CTYPES=OFF",
+                        "-DENABLE_DECIMAL=OFF",
+                        "-DENABLE_GRP=OFF",
+
+                        // KLUDGE: we assume some properties of the target platform to avoid running
+                        // programs on it to deduce them. They could be wrong!
+                        "-DX87_DOUBLE_ROUNDING=OFF",
+                        "-DTANH_PRESERVES_ZERO_SIGN=ON",
+                        "-DLOG1P_DROPS_ZERO_SIGN=ON",
+                        "-DPOSIX_SEMAPHORES_NOT_ENABLED=OFF",
+                        "-DHAVE_BROKEN_SEM_GETVALUE=OFF",
+                        "-DHAVE_BROKEN_NICE=OFF",
+                        "-DHAVE_BROKEN_POLL=OFF",
+                        "-DHAVE_WORKING_TZSET=ON",
+                        "-DHAVE_ALIGNED_REQUIRED=ON",
+                        "-DHAVE_BROKEN_MBSTOWCS=OFF",
+                        "-DHAVE_COMPUTED_GOTOS=OFF",
+                        "-DHAVE_GLIBC_MEMMOVE_BUG=OFF",
+                        "-DHAVE_LONG_LONG_FORMAT=OFF",
+                        "-DHAVE_SIZE_T_FORMAT=OFF",
+
+                        // Custom flag for enabling log forwarding to Android.
+                        "-DCOUT_TO_ANDROID_LOG=ON"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            // Note that there are two `cmake` blocks,
+            // see https://stackoverflow.com/questions/47370186/could-not-find-method-cppflags-arguments-for-arguments
+            path file('CMakeLists.txt')
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    splits {
+        // Configures multiple APKs based on ABI.
+        abi {
+            // Enables building multiple APKs per ABI.
+            enable true
+
+            // By default all ABIs are included, so use reset() and include to specify our selection.
+
+            // Resets the list of ABIs that Gradle should create APKs for to none.
+            reset()
+
+            // Specifies a list of ABIs that Gradle should create APKs for.
+            include(abis)
+
+            // Specifies that we do not want to also generate a universal APK that includes all ABIs.
+            universalApk false
+        }
+    }
+
+    kotlinOptions { jvmTarget = JavaVersion.VERSION_1_8 }
+}
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    testImplementation 'junit:junit:4.13.1'
+    androidTestImplementation "androidx.test.ext:junit:1.1.2"
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.3.0"
+}

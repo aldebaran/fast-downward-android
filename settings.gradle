@@ -1,2 +1,3 @@
 rootProject.name='FastDownwardPlanner'
+include ':library'
 include ':app'
