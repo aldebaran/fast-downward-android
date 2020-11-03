@@ -7,11 +7,11 @@ android {
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        applicationId "com.softbankrobotics.fastdownwardplanner"
+        applicationId "com.softbankrobotics.fastdownward"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode getProperty("VERSION_CODE") as Integer
+        versionName getProperty("VERSION_NAME") as String
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

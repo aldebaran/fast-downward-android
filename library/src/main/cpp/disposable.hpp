@@ -2,8 +2,8 @@
 // Created by victor.paleologue on 02/11/20.
 //
 
-#ifndef FASTDOWNWARDPLANNER_DISPOSABLE_HPP
-#define FASTDOWNWARDPLANNER_DISPOSABLE_HPP
+#ifndef FASTDOWNWARD_DISPOSABLE_HPP
+#define FASTDOWNWARD_DISPOSABLE_HPP
 
 #include <utility>
 
@@ -36,4 +36,4 @@ Disposable<T> make_disposable(T &&disposal_function) {
     return Disposable<T>(std::forward<T>(disposal_function));
 }
 
-#endif //FASTDOWNWARDPLANNER_DISPOSABLE_HPP
+#endif // FASTDOWNWARD_DISPOSABLE_HPP

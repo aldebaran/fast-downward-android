@@ -2,6 +2,9 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
+apply from: "$rootDir/gradle/deploy.gradle"
+apply from: "$rootDir/gradle/quality.gradle"
+
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
@@ -10,8 +13,11 @@ android {
     defaultConfig {
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode getProperty("VERSION_CODE") as Integer
+        versionName getProperty("VERSION_NAME") as String
+        def artifactId = getProperty("POM_ARTIFACT_ID") as String
+        def buildId = getGitCommitHash()
+        archivesBaseName = "$artifactId-$versionName-$buildId"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -101,4 +107,8 @@ dependencies {
     testImplementation 'junit:junit:4.13.1'
     androidTestImplementation "androidx.test.ext:junit:1.1.2"
     androidTestImplementation "androidx.test.espresso:espresso-core:3.3.0"
+}
+
+static def getGitCommitHash() {
+    'git rev-parse --verify --short HEAD'.execute().text.trim()
 }
