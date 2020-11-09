@@ -1,9 +1,5 @@
 package com.softbankrobotics.planning.ontology
 
-import java.util.*
-import kotlin.reflect.full.companionObjectInstance
-import kotlin.reflect.full.primaryConstructor
-
 interface TypeDeclaration {
     val type: Type
 }
@@ -107,22 +103,4 @@ fun createInstance(
         ReifiedAction.type.name -> ReifiedAction(name)
         else -> throw RuntimeException("Unknown type $typeName")
     }
-}
-
-// TODO: should be provided in the core of the ontology, and support extension.
-/**
- * Create an instance of the right Kotlin type given the PDDL Type.
- */
-inline fun <reified T : Instance> createInstance(name: String): T {
-    return T::class.primaryConstructor!!.call(name)
-}
-
-/**
- * Generates a random PDDL object of any instance type.
- */
-inline fun <reified T : Instance> generateInstance(): T {
-    val id = Random().nextInt(99999)
-    val strId = id.toString().padStart(5, '0')
-    val companion = T::class.companionObjectInstance!! as TypeDeclaration
-    return createInstance("${companion.type.name}_$strId")
 }

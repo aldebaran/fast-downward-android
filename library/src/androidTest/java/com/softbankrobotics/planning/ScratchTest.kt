@@ -2,7 +2,6 @@ package com.softbankrobotics.planning
 
 import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
-import com.softbankrobotics.fastdownward.ensureFastDownwardIsLoaded
 import com.softbankrobotics.fastdownward.searchPlanFastDownward
 import com.softbankrobotics.planning.utils.ensurePythonInitialized
 import org.junit.Assert
