@@ -135,6 +135,7 @@ data class Either<T>(val values: Collection<T>) {
 /** Extract all the predicates involved in the consequences in the given expression. */
 fun extractConsequentPredicatesFromExpression(expression: Expression): Set<Either<String>> {
     return when (expression.word) {
+        assignment_operator_name, increase_operator_name -> setOf()
         not_operator_name -> extractConsequentPredicatesFromExpression(expression.args[0])
         and_operator_name ->
             expression.args.flatMap { extractConsequentPredicatesFromExpression(it) }.toSet()
@@ -148,6 +149,6 @@ fun extractConsequentPredicatesFromExpression(expression: Expression): Set<Eithe
             extractConsequentPredicatesFromExpression(expression.args[1])
         forall_operator_name, exists_operator_name ->
             extractConsequentPredicatesFromExpression(expression.args[1])
-        else -> return setOf(Either(expression.word))
+        else -> setOf(Either(expression.word))
     }
 }
