@@ -45,20 +45,8 @@ fun createDomain(
     domain += ")\n\n"
 
     // Fill the predicates
-    val predicatesByName = predicates.map { it.word to it }.toMap()
-    val expectedPredicateNames = predicatesByName.keys
-    val involvedPredicateNames =
-        actions.flatMap { extractPredicates(it.precondition).plus(extractPredicates(it.effect)) }
-            .toSet()
-    val missingPredicates = involvedPredicateNames - expectedPredicateNames
-    if (missingPredicates.isNotEmpty())
-        throw IllegalArgumentException("actions use undefined predicates $missingPredicates")
-
-    val involvedPredicates = involvedPredicateNames.map {
-        predicatesByName[it] ?: error("actions use undefined predicate $it")
-    }
     domain += "(:predicates"
-    domain += involvedPredicates.joinToString("\n    ", "\n    ", "\n") {
+    domain += predicates.joinToString("\n    ", "\n    ", "\n") {
         it.toDeclarationString()
     }
     domain += ")\n\n"

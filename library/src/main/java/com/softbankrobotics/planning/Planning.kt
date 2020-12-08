@@ -2,10 +2,7 @@ package com.softbankrobotics.planning
 
 import com.softbankrobotics.fastdownward.searchPlanFastDownward
 import com.softbankrobotics.planning.ontology.*
-import com.softbankrobotics.planning.utils.createDomain
-import com.softbankrobotics.planning.utils.createProblem
-import com.softbankrobotics.planning.utils.evaluateExpression
-import com.softbankrobotics.planning.utils.extractConsequentPredicatesFromExpression
+import com.softbankrobotics.planning.utils.*
 
 
 typealias LogFunction = (String) -> Unit
@@ -117,6 +114,23 @@ fun checkErrors(
     init: Collection<Fact>,
     goals: Collection<Goal>
 ) {
+    // Check that no unknown predicate is used...
+    fun checkMissing(actual: Set<String>, expected: Set<String>, context: String) {
+        val missing = actual - expected
+        if (missing.isNotEmpty())
+            throw IllegalArgumentException("$context use undefined predicates $missing")
+    }
+    val expectedPredicateNames = predicates.map { it.word }.toSet()
+    // ... in actions...
+    val involvedPredicateNamesInActions =
+            actions.flatMap { extractPredicates(it.precondition)
+                    .plus(extractPredicates(it.effect)) }
+                    .toSet()
+    checkMissing(involvedPredicateNamesInActions, expectedPredicateNames, "actions")
+    // ... and in goals.
+    val involvedPredicateNamesInGoals = goals.flatMap { extractPredicates(it) }.toSet()
+    checkMissing(involvedPredicateNamesInGoals, expectedPredicateNames, "goals")
+
     // Check whether goals mention predicates that are not mentioned in the effects of actions.
     val goalPredicates =
         goals.flatMap { extractConsequentPredicatesFromExpression(it) }.distinct()
