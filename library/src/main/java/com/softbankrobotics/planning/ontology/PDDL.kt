@@ -3,8 +3,8 @@ package com.softbankrobotics.planning.ontology
 import android.os.Parcel
 import android.os.Parcelable
 import com.softbankrobotics.planning.utils.Index
-import com.softbankrobotics.planning.utils.MutableIndex
 import com.softbankrobotics.planning.utils.Named
+import com.softbankrobotics.planning.utils.mutableIndexOf
 import java.io.Serializable
 
 /** Top class to perform logical manipulation. */
@@ -95,7 +95,7 @@ data class Type(
     }
 
     companion object {
-        private val mutableIndex = MutableIndex<Type>()
+        private val mutableIndex = mutableIndexOf<Type>()
         val index: Index<Type> = mutableIndex
     }
 }
@@ -144,10 +144,9 @@ open class Instance(override val name: String) : Named, Typed, Expression(name) 
          * Creates an instance from a text representation.
          */
         fun create(name: String, typeName: String): Instance {
-            val type = Type.index.resolve(typeName) ?: error("no such type \"$typeName\"")
+            val type = Type.index[typeName] ?: error("no such type \"$typeName\"")
             return type.createInstance(name)
         }
-
     }
 }
 

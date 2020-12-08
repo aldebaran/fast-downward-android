@@ -1,47 +1,50 @@
 package com.softbankrobotics.planning.utils
 
+import java.util.concurrent.ConcurrentHashMap
+
 /**
- * An index regroups named objects with unique string identifiers (aka names).
- * Thread-safe.
+ * Regroups named objects with unique string identifiers (aka names).
  */
-interface Index<T> {
-    /**
-     * The set of all objects.
-     */
-    val all: Set<T>
-
-    /**
-     * Resolves the object by its name.
-     */
-    fun resolve(name: String): T?
-}
+typealias Index<T> = Map<String, T>
 
 /**
- * An index regroups named objects with unique names.
- * Thread-safe.
+ * Creates an index from a name mapping and a list of objects.
+ */
+fun <T> indexOf(nameOf: (T) -> String, vararg elements: T): Index<T> = elements.associateBy(nameOf)
+
+/**
+ * Helper to create an index from named objects.
+ */
+fun <T : Named> indexOf(vararg elements: T): Index<T> = elements.associateBy { it.name }
+
+
+/**
+ * A mutable index, thread-safe.
+ * Allows only operations that guarantees that both values and names are unique.
  */
 class MutableIndex<T>(private val nameOf: (T) -> String) : Index<T> {
 
-    private val mutableIndex = mutableMapOf<String, T>()
-
-    override val all: Set<T> get() = synchronized(this) {
-        mutableIndex.values.toSet()
-    }
-
-    override fun resolve(name: String): T? = synchronized(this) {
-        return mutableIndex[name]
-    }
+    // Map-related
+    private val data = ConcurrentHashMap<String, T>()
+    override val entries: Set<Map.Entry<String, T>> get() = data.entries
+    override val keys: Set<String> get() = data.keys
+    override val size: Int get() = data.size
+    override val values: Collection<T> = data.values
+    override fun containsKey(key: String): Boolean = data.containsKey(key)
+    override fun containsValue(value: T): Boolean = data.containsValue(value)
+    override fun get(key: String): T? = data[key]
+    override fun isEmpty(): Boolean = data.isEmpty()
 
     /**
      * Adds the object to the index if not already found.
      * @throws IllegalStateException If a different object is found under the same name.
      */
     fun ensure(incoming: T) = synchronized(this) {
-        val existing = mutableIndex[nameOf(incoming)]
+        val existing = data[nameOf(incoming)]
         if (existing != null) {
             assertNoConflict(incoming, existing, nameOf)
         } else {
-            mutableIndex[nameOf(incoming)] = incoming
+            data[nameOf(incoming)] = incoming
         }
     }
 
@@ -50,10 +53,10 @@ class MutableIndex<T>(private val nameOf: (T) -> String) : Index<T> {
      * @throws IllegalStateException If a different object is found under the same name.
      */
     fun remove(incoming: T) = synchronized(this) {
-        val existing = mutableIndex[nameOf(incoming)]
+        val existing = data[nameOf(incoming)]
         if (existing != null) {
             assertNoConflict(existing, incoming, nameOf)
-            mutableIndex.remove(nameOf(incoming))
+            data.remove(nameOf(incoming))
         }
     }
 
@@ -65,13 +68,27 @@ class MutableIndex<T>(private val nameOf: (T) -> String) : Index<T> {
         private fun <T> assertNoConflict(existing: T, incoming: T, nameOf: (T) -> String) {
             if (nameOf(existing) == nameOf(incoming)) {
                 if (existing != incoming) {
-                    error("\"${nameOf(existing)}\" already exists but differs\n" +
-                            "incoming: $incoming\nexisting: $existing")
+                    error(
+                        "\"${nameOf(existing)}\" already exists but differs\n" +
+                                "incoming: $incoming\nexisting: $existing"
+                    )
                 }
             }
         }
     }
 }
 
-fun <T : Named> createMutableIndex(): MutableIndex<T> = MutableIndex { it.name }
-fun <T> createMutableIndex(nameOf: (T) -> String): MutableIndex<T> = MutableIndex(nameOf)
+/**
+ * Creates a mutable index from a name mapping and elements.
+ */
+fun <T> mutableIndexOf(nameOf: (T) -> String, vararg elements: T): MutableIndex<T> {
+    val index = MutableIndex(nameOf)
+    elements.forEach { index.ensure(it) }
+    return index
+}
+
+/**
+ * Helper to create a mutable index from named objects.
+ */
+fun <T : Named> mutableIndexOf(vararg elements: T): MutableIndex<T> =
+    mutableIndexOf<T>({ it.name }, *elements)
