@@ -101,7 +101,7 @@ data class Type(
 }
 
 interface Typed {
-    val type: Type?
+    val type: Type
 }
 
 /**
@@ -109,7 +109,7 @@ interface Typed {
  * Only the name matters for comparisons and hash.
  */
 open class Instance(override val name: String) : Named, Typed, Expression(name) {
-    override val type: Type? = Companion.type
+    override val type: Type = Companion.type
     override fun toString(): String = name
 
     /**
@@ -118,7 +118,7 @@ open class Instance(override val name: String) : Named, Typed, Expression(name) 
      */
     override fun equals(other: Any?): Boolean {
         return if (other is Instance) {
-            if (name == other.name && type != other.type && type != null && other.type != null)
+            if (name == other.name && type != other.type)
                 error("mismatching types for two instances with the same name")
             name == other.name
         } else {
@@ -132,13 +132,14 @@ open class Instance(override val name: String) : Named, Typed, Expression(name) 
 
     /** PDDL representation of the declaration of the instance. */
     fun declaration(): String {
-        val typeSpecifier = if (type != null) " - ${type!!.name}" else ""
+        // When type is omitted in PDDL, it already means "object"
+        val typeSpecifier = if (type != Companion.type) " - ${type.name}" else ""
         return "$this$typeSpecifier"
     }
 
     companion object : Typed {
 
-        override val type: Type? = null
+        override val type: Type = Type("object", null) { Instance(it) }
 
         /**
          * Creates an instance from a text representation.
