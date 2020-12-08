@@ -94,6 +94,10 @@ data class Type(
         mutableIndex.ensure(this)
     }
 
+    override fun toString(): String {
+        return if (parent != null) "$parent > $name" else name
+    }
+
     companion object {
         private val mutableIndex = mutableIndexOf<Type>()
         val index: Index<Type> = mutableIndex
@@ -118,8 +122,10 @@ open class Instance(override val name: String) : Named, Typed, Expression(name) 
      */
     override fun equals(other: Any?): Boolean {
         return if (other is Instance) {
-            if (name == other.name && type != other.type)
-                error("mismatching types for two instances with the same name")
+            if (name == other.name && type != other.type) {
+                error("mismatching types ($type vs. ${other.type}) " +
+                        "for two instances with the same name \"$name\"")
+            }
             name == other.name
         } else {
             false
