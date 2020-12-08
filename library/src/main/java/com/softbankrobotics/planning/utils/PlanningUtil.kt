@@ -74,10 +74,6 @@ fun createDomain(
     return domain
 }
 
-fun createProblemBase(goals: Goals): String {
-    return createProblem(listOf(), listOf(), goals)
-}
-
 fun createProblem(
     objects: Collection<Instance>,
     init: Collection<Fact>,
