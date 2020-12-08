@@ -1,63 +1,62 @@
 package com.softbankrobotics.planning.ontology
 
-interface TypeDeclaration {
-    val type: Type
-}
+import com.softbankrobotics.planning.ontology.Instance
+import com.softbankrobotics.planning.ontology.Type
 
 /** Reflexive type to refer to PDDL predicates. */
 class Predicate(name: String) : Instance(name) {
-    companion object: TypeDeclaration {
-        override val type = Type("predicate")
-    }
-
     override val type: Type = Companion.type
+
+    companion object : Typed {
+        override val type = Type("predicate", null) { Predicate(it) }
+    }
 }
 
 /** Something that has a physical presence in the world. */
 open class PhysicalObject(name: String) : Instance(name) {
-    companion object : TypeDeclaration {
-        override val type = Type("physical_object")
-    }
-
     override val type: Type = Companion.type
+
+    companion object : Typed {
+        override val type = Type("physical_object", null) { PhysicalObject(it) }
+    }
 }
 
 /** Something that can believe, desire, intend. */
 open class AgentivePhysicalObject(name: String) : PhysicalObject(name) {
-    companion object {
-        val type = Type("social_agent", PhysicalObject.type)
-    }
-
     override val type: Type = Companion.type
+
+    companion object : Typed {
+        override val type = Type("social_agent", PhysicalObject.type) { AgentivePhysicalObject(it) }
+    }
 }
 
 /** A human as the robot can see them. */
 class Human(name: String) : AgentivePhysicalObject(name) {
-    companion object : TypeDeclaration {
-        override val type = Type("human", AgentivePhysicalObject.type)
-    }
-
     override val type: Type = Companion.type
+
+    companion object : Typed {
+        override val type = Type("human", AgentivePhysicalObject.type) { Human(it) }
+    }
 }
 
 val humanType = Human.type
 
 /** An intent that can be desired by a social agent. */
 class Intent(name: String) : Instance(name) {
-    companion object : TypeDeclaration {
-        override val type = Type("intent")
-    }
+    override val type: Type = Companion.type
 
-    override val type: Type? = Companion.type
+    companion object : Typed {
+        override val type = Type("intent", null) { Intent(it) }
+    }
 }
 
 /** A point of interest in space. */
 class Poi(name: String) : PhysicalObject(name) {
-    companion object : TypeDeclaration {
-        override val type = Type("poi", PhysicalObject.type)
-    }
-
     override val type: Type = Companion.type
+
+    companion object : Typed {
+        override val type = Type("poi", PhysicalObject.type) { Poi(it) }
+    }
 }
 
 val poiType = Poi.type
@@ -65,42 +64,25 @@ val poiType = Poi.type
 // TODO: merge this with "predicate"
 /** A symbolic statement that can be known. */
 class Statement(name: String) : Instance(name) {
-    companion object : TypeDeclaration {
-        override val type = Type("statement")
-    }
-
     override val type: Type = Companion.type
+
+    companion object : Typed {
+        override val type = Type("statement", null) { Statement(it) }
+    }
 }
 
 /** A reification of an action. */
 class ReifiedAction(name: String) : Instance(name) {
-    companion object : TypeDeclaration {
-        override val type = Type("reified_action") // TODO: try with name "action"
+    override val type: Type = Companion.type
+
+    companion object : Typed {
+        // TODO: try with name "action"
+        override val type = Type("reified_action", null) { ReifiedAction(it) }
 
         /** Shortcut to create a new symbol reifying the given PDDL action. */
         fun of(pddl: Action): ReifiedAction {
             return ReifiedAction("${pddl.name}_action")
         }
     }
-
-    override val type: Type = Companion.type
 }
 
-/**
- * Create an instance of the right Kotlin type given the PDDL Type.
- */
-fun createInstance(
-    name: String,
-    typeName: String
-): Instance {
-    return when (typeName) {
-        Predicate.type.name -> Predicate(name)
-        AgentivePhysicalObject.type.name -> AgentivePhysicalObject(name)
-        Human.type.name -> Human(name)
-        Intent.type.name -> Intent(name)
-        Poi.type.name -> Poi(name)
-        Statement.type.name -> Statement(name)
-        ReifiedAction.type.name -> ReifiedAction(name)
-        else -> throw RuntimeException("Unknown type $typeName")
-    }
-}

@@ -2,8 +2,10 @@ package com.softbankrobotics.planning.ontology
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.softbankrobotics.planning.utils.Index
+import com.softbankrobotics.planning.utils.MutableIndex
+import com.softbankrobotics.planning.utils.Named
 import java.io.Serializable
-import java.lang.RuntimeException
 
 /** Top class to perform logical manipulation. */
 sealed class LogicalExpression
@@ -71,23 +73,48 @@ fun negationOf(fact: Expression): Expression {
 }
 
 // Types / Instances
-/** Represents a type. Can have a parent. */
-data class Type(val name: String, val parent: Type? = null)
+/**
+ * Represents a type. Can have a parent.
+ * A factory to create instances of the type is required
+ * so that the JVM type system can also be used to check the JVM type of the instances,
+ * an thus leverage build-time type checking.
+ * Every type ever constructed can be found back by their name, in the index of types.
+ * Note that this index must remain unique to be consistent with the JVM type system.
+ * @param createInstance A factory to create typed instances of this type.
+ * @param name PDDL name of the type. Only ASCII alphanumerical characters and "_" are supported.
+ * @param parent The parent type, as in a class hierarchy.
+ * @throws IllegalStateException If a different type with the same name exists in the type system.
+ */
+data class Type(
+        override val name: String,
+        val parent: Type?,
+        val createInstance: (String) -> Instance) : Named {
+
+    init {
+        mutableIndex.ensure(this)
+    }
+
+    companion object {
+        private val mutableIndex = MutableIndex<Type>()
+        val index: Index<Type> = mutableIndex
+    }
+}
+
+interface Typed {
+    val type: Type?
+}
 
 /**
  * Represents an instance. Can have a type.
  * Only the name matters for comparisons and hash.
  */
-open class Instance(val name: String) : Expression(name) {
-
-    open val type: Type? = null
-
+open class Instance(override val name: String) : Named, Typed, Expression(name) {
+    override val type: Type? = Companion.type
     override fun toString(): String = name
 
     /**
      * Equals comparing instances by their names.
-     * If two instances have the same name and two different (non-null) types,
-     * something is fishy in the program, so an error is thrown.
+     * @throws IllegalStateException if they have the same name but are different.
      */
     override fun equals(other: Any?): Boolean {
         return if (other is Instance) {
@@ -107,6 +134,20 @@ open class Instance(val name: String) : Expression(name) {
     fun declaration(): String {
         val typeSpecifier = if (type != null) " - ${type!!.name}" else ""
         return "$this$typeSpecifier"
+    }
+
+    companion object : Typed {
+
+        override val type: Type? = null
+
+        /**
+         * Creates an instance from a text representation.
+         */
+        fun create(name: String, typeName: String): Instance {
+            val type = Type.index.resolve(typeName) ?: error("no such type \"$typeName\"")
+            return type.createInstance(name)
+        }
+
     }
 }
 

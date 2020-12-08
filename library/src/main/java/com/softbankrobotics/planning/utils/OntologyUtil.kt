@@ -56,7 +56,7 @@ private fun parseParameter(expression: Expression): Instance {
     val parameterDeclaration = expression.word
     val matches = Regex("([\\w?]+) - (\\w+)").matchEntire(parameterDeclaration)!!
     val (name, type) = matches.groupValues.subList(1, matches.groupValues.size)
-    return createInstance(name, type)
+    return Instance.create(name, type)
 }
 
 /**
