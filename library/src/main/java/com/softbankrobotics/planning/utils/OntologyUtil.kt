@@ -152,3 +152,19 @@ fun extractConsequentPredicatesFromExpression(expression: Expression): Set<Eithe
         else -> setOf(Either(expression.word))
     }
 }
+
+/**
+ * Extract all the predicates involved in the given expression.
+ */
+fun extractPredicates(expression: Expression): Set<String> {
+    return when (expression.word) {
+        assignment_operator_name, increase_operator_name -> setOf()
+        not_operator_name -> extractPredicates(expression.args[0])
+        and_operator_name -> expression.args.flatMap { extractPredicates(it) }.toSet()
+        or_operator_name -> expression.args.flatMap { extractPredicates(it) }.toSet()
+        imply_operator_name, when_operator_name ->
+            extractPredicates(expression.args[0]).plus(extractPredicates(expression.args[1]))
+        forall_operator_name, exists_operator_name -> extractPredicates(expression.args[1])
+        else -> return setOf(expression.word)
+    }
+}
