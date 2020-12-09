@@ -17,6 +17,19 @@ fun <T> indexOf(nameOf: (T) -> String, vararg elements: T): Index<T> = elements.
  */
 fun <T : Named> indexOf(vararg elements: T): Index<T> = elements.associateBy { it.name }
 
+/**
+ * Helper to quickly make an index from a set of named objects.
+ */
+inline fun <reified T> Set<T>.toIndex(noinline nameOf: (T) -> String): Index<T> {
+    return indexOf(nameOf, *this.toTypedArray())
+}
+
+/**
+ * Helper to quickly make an index from a set of named objects.
+ */
+inline fun <reified T : Named> Set<T>.toIndex(): Index<T> {
+    return indexOf(*this.toTypedArray())
+}
 
 /**
  * A mutable index, thread-safe.
