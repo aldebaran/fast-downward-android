@@ -29,9 +29,11 @@ class MainActivity : AppCompatActivity() {
             searchPlan(domain, problem) { Log.i("FastDownward", it) }
         }
     }
-}
 
-fun stringFromRawResource(context: Context, resourceId: Int): String {
-    val inputStream = context.resources.openRawResource(resourceId)
-    return Scanner(inputStream, "UTF-8").useDelimiter("\\A").next()
+    companion object {
+        fun stringFromRawResource(context: Context, resourceId: Int): String {
+            val inputStream = context.resources.openRawResource(resourceId)
+            return Scanner(inputStream, "UTF-8").useDelimiter("\\A").next()
+        }
+    }
 }
