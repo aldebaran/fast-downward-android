@@ -2,56 +2,27 @@ package com.softbankrobotics.fastdownward
 
 import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
-import org.junit.Assert
+import com.softbankrobotics.pddlplanning.PlanSearchFunction
+import com.softbankrobotics.pddlplanning.test.PlanningInstrumentedTest
+import com.softbankrobotics.pddlplanning.test.stringFromRawResourceName
+import com.softbankrobotics.python.ensurePythonInitialized
 import org.junit.BeforeClass
 import org.junit.Test
 
-class FastDownwardInstrumentedTest {
+/**
+ * Checking that planning works.
+ */
+class FastDownwardTest : PlanningInstrumentedTest {
 
-    companion object {
-
-        private lateinit var context: Context
-
-        @BeforeClass
-        @JvmStatic
-        fun initContextAndPython() {
-            // Context of the app under test.
-            context = InstrumentationRegistry.getInstrumentation().targetContext
-            Assert.assertEquals("com.softbankrobotics.fastdownward", context.packageName)
-        }
-
-        fun stringFromRawResourceName(resourceName: String): String {
-            val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
-            return stringFromRawResource(context, resourceId)
-        }
-    }
-
-    @Test
-    fun translationToSAS1() {
-        val domain = stringFromRawResourceName("fast_downward_1_domain")
-        println("Domain:\n$domain")
-        val problem = stringFromRawResourceName("fast_downward_1_problem")
-        println("Problem:\n$problem")
-
-        val sas = translatePDDLToSAS(domain, problem)
-        Assert.assertEquals(stringFromRawResourceName("fast_downward_1_sas"), sas)
-    }
+    override val context: Context by lazy { InstrumentationRegistry.getInstrumentation().targetContext }
+    override val logTag: String = "FastDownwardTest"
+    override val searchPlan: PlanSearchFunction by lazy { setupFastDownwardPlanner(context) }
 
     @Test
     fun searchPlanFromSAS1() {
-        val sas = stringFromRawResourceName("fast_downward_1_sas")
+        val sas = stringFromRawResourceName(context, "fast_downward_1_sas")
         println("SAS:\n$sas")
-        val plan = searchPlanFromSAS(sas,"astar(add())")
-        println("Plan:\n$plan")
-    }
-
-    @Test
-    fun searchPlanFromPDDL1() {
-        val domain = stringFromRawResourceName("fast_downward_1_domain")
-        println("Domain:\n$domain")
-        val problem = stringFromRawResourceName("fast_downward_1_problem")
-        println("Problem:\n$problem")
-        val plan = searchPlan(domain, problem)
+        val plan = searchPlanFromSASInternal(sas, "astar(add())")
         println("Plan:\n$plan")
     }
 
@@ -171,6 +142,26 @@ class FastDownwardInstrumentedTest {
                 "        ))\n" +
                 "    )"
 
-        translatePDDLToSAS(domain, problem)
+        translatePDDLToSASInternal(domain, problem)
+    }
+
+    @Test
+    fun searchPlanFromPDDL1() {
+        val domain = stringFromRawResourceName(context, "fast_downward_1_domain")
+        println("Domain:\n$domain")
+        val problem = stringFromRawResourceName(context, "fast_downward_1_problem")
+        println("Problem:\n$problem")
+        val plan = searchPlan(domain, problem)
+        println("Plan:\n$plan")
+    }
+
+
+    companion object {
+        @JvmStatic
+        @BeforeClass
+        fun initialization() {
+            ensurePythonInitialized(InstrumentationRegistry.getInstrumentation().targetContext)
+            ensureFastDownwardIsLoaded()
+        }
     }
 }

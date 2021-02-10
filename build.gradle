@@ -30,6 +30,10 @@ buildscript {
 
 allprojects {
     repositories {
+        // SBRE internal maven servers
+        maven { url 'http://android-ci-dev:8080/repository/experimental' }
+        maven { url 'http://android-ci-dev:8080/repository/dev-releases' }
+
         google()
         jcenter()
         

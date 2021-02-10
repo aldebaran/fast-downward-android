@@ -1,16 +1,21 @@
 package com.softbankrobotics.fastdownward
 
-import com.softbankrobotics.planning.LogFunction
-import com.softbankrobotics.planning.ontology.Task
-import com.softbankrobotics.planning.ontology.Tasks
+import android.content.Context
+import com.softbankrobotics.pddlplanning.LogFunction
+import com.softbankrobotics.pddlplanning.PlanSearchFunction
+import com.softbankrobotics.pddlplanning.Task
+import com.softbankrobotics.pddlplanning.Tasks
+import com.softbankrobotics.python.ensurePythonInitialized
 import com.softbankrobotics.python.pythonIsInitialized
 
 /**
- * Search for a plan using fast downward planner and default search strategy.
- * Python must be initialized first. Please call initializePython(context) to do so.
+ * Sets up the environment for the Fast Downward planner,
+ * and provides the corresponding plan search function.
  */
-fun searchPlanFastDownward(domain: String, problem: String): Tasks {
-    return searchPlanFastDownward(domain, problem, null)
+fun setupFastDownwardPlanner(context: Context): PlanSearchFunction {
+    ensurePythonInitialized(context)
+    ensureFastDownwardIsLoaded()
+    return ::searchPlanFastDownward
 }
 
 /**
@@ -23,7 +28,7 @@ fun searchPlanFastDownward(domain: String, problem: String): Tasks {
  * @return A list of tasks to perform.
  * @throws RuntimeException If the problem is not well formed, or if there is no solution.
  */
-fun searchPlanFastDownward(
+suspend fun searchPlanFastDownward(
     domain: String,
     problem: String,
     log: LogFunction? = null
@@ -74,13 +79,6 @@ fun searchPlan(domain: String, problem: String): String {
     }.filterNotNull().joinToString("\n")
 }
 
-/** Splits PDDL content into a domain and a problem. */
-fun splitDomainAndProblem(pddlContent: String): Pair<String, String> {
-    val domain = pddlContent.substringBeforeLast("(define ")
-    val problem = pddlContent.substring(domain.length)
-    return Pair(domain, problem)
-}
-
 /**
  * Whether the native library was already loaded.
  */
@@ -107,6 +105,10 @@ internal fun translatePDDLToSASInternal(domain: String, problem: String): String
 }
 
 private external fun searchPlanFromSAS(sas: String, strategy: String): String
+internal fun searchPlanFromSASInternal(sas: String, strategy: String): String {
+    ensureFastDownwardIsLoaded()
+    return searchPlanFromSAS(sas, strategy)
+}
 
 /**
  * Search plan using Fast Downward.

@@ -10,6 +10,17 @@ val pythonIsInitialized: Boolean get() = mutablePythonIsInitialized
 private var mutablePythonIsInitialized = false
 lateinit var pythonSysPath: String
 
+/**
+ * Helper for tests that cannot tell if they are run along with other tests.
+ * If you call this from production code, you are probably doing it wrong.
+ */
+fun ensurePythonInitialized(context: Context): String {
+    return if (pythonIsInitialized)
+        pythonSysPath
+    else
+        initializePython(context)
+}
+
 fun initializePython(context: Context): String {
 
     if (pythonIsInitialized)
