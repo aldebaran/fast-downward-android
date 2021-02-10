@@ -3,7 +3,7 @@
 buildscript {
     ext {
         // Kotlin
-        kotlin_version = '1.4.10'
+        kotlin_version = '1.4.30'
 
         // NDK
         ndk_version = '21.3.6528147'
@@ -16,10 +16,9 @@ buildscript {
     repositories {
         google()
         jcenter()
-        
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath 'com.android.tools.build:gradle:4.1.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'org.jetbrains.dokka:dokka-gradle-plugin:0.10.1'
         classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7'
