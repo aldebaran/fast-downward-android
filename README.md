@@ -1,18 +1,34 @@
+# Fast Downward for Android
+
+This is a port of the [Fast Downward PDDL Planner](http://www.fast-downward.org/) for Android.
+
+This project implements the interface provided by `com.softbankrobotics:pddl-planning`.
+
+## Usage as a library
+
 Get the library with Gradle:
 ```groovy
-implementation 'com.softbankrobotics:fast-downward-android:1.2.0'
+implementation 'com.softbankrobotics:fast-downward-android:2.0.1'
 ```
-(where 1.2.0 can be replaced by latest release)
+Use `setupFastDownwardPlanner` to get a `PlanSearchFunction`,
+that can be used along with the utilities provided by `com.softbankrobotics:pddl-planning`.
+
+## Usage as a stand-alone service
 
 To use it as a stand-alone Android service application:
 - build the `app` module, and install it on the device.
-- copy the [AIDL](app/src/main/aidl/com/softbankrobotics/fastdownward/IPlannerService.aidl)
-interface to your dependent project
-- connect the `PlannerService` and call the method `String searchPlan(String pddl)` with your PDDL
-(domain and problem concatenated into a single `String`)
-- parse the result plan, formatted as follows:
-```
-task1 arg1 arg2\n
-task2\n
-task3 arg\n
-```
+- let your module depend on the PDDL Planning interface for Android:
+  ```groovy
+  implementation 'com.softbankrobotics:pddl-planning:1.1.3'
+  ```
+- use `createPlanSearchFunctionFromService` with the right `Intent` to target this app's service
+  to get a `PlanSearchFunction`:
+  ```kotlin
+  val intent = Intent(ACTION_SEARCH_PLANS_FROM_PDDL)
+  intent.`package` = "com.softbankrobotics.fastdownward"
+  val searchPlan: PlanSearchFunction = createPlanSearchFunctionFromService(context, intent)
+  ```
+
+## License
+
+This project is distributed under the [GPLv3 license](LICENSE).
