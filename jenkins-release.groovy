@@ -8,7 +8,14 @@ node("android-build-jdk8") {
     stage('Checkout SCM') { checkout scm }
 
     stage('Compile') {
-        sh "./gradlew assembleRelease $extraBuildOptions"
+        withCredentials([
+                file(credentialsId: 'keystoreFileAndroid', variable: 'KEYSTORE_FILE'),
+                string(credentialsId: 'keystorePasswordAndroid', variable: 'KEYSTORE_PASSWORD'),
+                string(credentialsId: 'keystoreAliasSample', variable: 'KEYSTORE_ALIAS'),
+                string(credentialsId: 'aliasPasswordSample', variable: 'ALIAS_PASSWORD'),
+        ]) {
+            sh "./gradlew assembleRelease $extraBuildOptions"
+        }
     }
 
     stage('Upload AAR to Nexus') {
