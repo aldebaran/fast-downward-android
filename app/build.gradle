@@ -11,7 +11,8 @@ android {
         targetSdkVersion 29
         versionCode getProperty("VERSION_CODE") as Integer
         versionName getProperty("VERSION_NAME") as String
-
+        def buildId = getGitCommitHash()
+        archivesBaseName = "fastdownward-$versionName-$buildId"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

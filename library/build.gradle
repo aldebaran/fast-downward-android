@@ -109,7 +109,3 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     androidTestImplementation 'com.softbankrobotics:pddl-planning-test:1.1.3'
 }
-
-static def getGitCommitHash() {
-    'git rev-parse --verify --short HEAD'.execute().text.trim()
-}

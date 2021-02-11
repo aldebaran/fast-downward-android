@@ -42,3 +42,7 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+static def getGitCommitHash() {
+    'git rev-parse --verify --short HEAD'.execute().text.trim()
+}
