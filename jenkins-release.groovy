@@ -31,6 +31,6 @@ node("android-build-jdk8") {
     }
 
     stage('Archive AAR') {
-        archiveArtifacts '**/*.aar'
+        archiveArtifacts '**/*.aar,**/*.apk'
     }
 }

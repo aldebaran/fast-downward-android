@@ -8,5 +8,5 @@ node("android-build-jdk8") {
         sh "./gradlew assembleRelease -PABIS=\"armeabi-v7a\""
     }
 
-    stage('Archive AAR') { archiveArtifacts '**/*.aar' }
+    stage('Archive AAR') { archiveArtifacts '**/*.aar,**/*.apk' }
 }
