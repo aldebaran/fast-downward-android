@@ -8,8 +8,7 @@ node("android-build-jdk8") {
     stage('Checkout SCM') { checkout scm }
 
     stage('Compile') {
-        sh "./gradlew clean $extraBuildOptions"
-        sh "./gradlew :library:assembleRelease $extraBuildOptions"
+        sh "./gradlew assembleRelease $extraBuildOptions"
     }
 
     stage('Upload AAR to Nexus') {
@@ -27,7 +26,7 @@ node("android-build-jdk8") {
                         usernameVariable: 'NEXUS_USER')
         ]) {
             echo 'Now in credentials context.'
-            sh "./gradlew -DNEXUS_PASSWORD=$NEXUS_PASSWORD -DNEXUS_USER=$NEXUS_USER -DBUILD=$BUILD_TYPE uploadArchives $extraBuildOptions"
+            sh "./gradlew -DNEXUS_PASSWORD=$NEXUS_PASSWORD -DNEXUS_USER=$NEXUS_USER -DBUILD=$BUILD_TYPE :library:uploadArchives $extraBuildOptions"
         }
     }
 
