@@ -6,6 +6,8 @@ import android.os.IBinder
 import android.util.Log
 import com.softbankrobotics.pddlplanning.IPDDLPlannerService
 import com.softbankrobotics.pddlplanning.IPDDLPlannerService.ACTION_SEARCH_PLANS_FROM_PDDL
+import com.softbankrobotics.pddlplanning.PDDLPlanningException
+import com.softbankrobotics.pddlplanning.PDDLTranslationException
 import com.softbankrobotics.pddlplanning.Task
 import kotlinx.coroutines.runBlocking
 
