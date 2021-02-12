@@ -1,10 +1,7 @@
 package com.softbankrobotics.fastdownward
 
 import android.content.Context
-import com.softbankrobotics.pddlplanning.LogFunction
-import com.softbankrobotics.pddlplanning.PlanSearchFunction
-import com.softbankrobotics.pddlplanning.Task
-import com.softbankrobotics.pddlplanning.Tasks
+import com.softbankrobotics.pddlplanning.*
 import com.softbankrobotics.python.ensurePythonInitialized
 import com.softbankrobotics.python.pythonIsInitialized
 
@@ -32,51 +29,40 @@ suspend fun searchPlanFastDownward(
     domain: String,
     problem: String,
     log: LogFunction? = null
-): Tasks =
-    synchronized(plannerLock) {
-        if (!pythonIsInitialized)
-            throw RuntimeException("please initialize Python with `initializePython(context)` before using Fast Downward")
-        ensureFastDownwardIsLoaded()
-
-        if (log != null) log("Translating PDDL to SAS")
-        val sas = try {
-            translatePDDLToSAS(domain, problem)
-        } catch (t: Throwable) {
-            throw RuntimeException(
-                "Error in SAS translation: ${t.message}.\n" +
-                        "PDDL Domain:\n$domain\n" +
-                        "PDDL Problem:\n$problem"
-            )
-        }
-        if (log != null) log("Translation done")
-
-        val result = searchPlanFromSAS(sas, "astar(blind())")
-        if (log != null) log("Raw planner result: $result")
-        val (plan, _) = result.split(';')
-        return plan.split("\n").map { line ->
-            if (line.isEmpty())
-                return@map null
-            if (!line.startsWith('(') || !line.endsWith(')')) {
-                error("Malformed line of plan result:\n$line\nIn:\n$result")
-            }
-            val task = line.substring(1, line.length - 1)
-            val taskArgs = task.split(' ').filter { it.isNotEmpty() }.map { it.trim() }
-            Task.create(*taskArgs.toTypedArray())
-        }.filterNotNull()
-    }
-
-/** Search plan with default strategy: astar(blind()). */
-fun searchPlan(domain: String, problem: String): String {
+): Tasks = synchronized(plannerLock) {
+    if (!pythonIsInitialized)
+        throw IllegalStateException("please initialize Python with `initializePython(context)` before using Fast Downward")
     ensureFastDownwardIsLoaded()
-    val result = searchPlanFastDownward(domain, problem, "astar(blind())")
+
+    if (log != null) log("Translating PDDL to SAS")
+    val sas = try {
+        translatePDDLToSAS(domain, problem)
+    } catch (e: Throwable) {
+        throw PDDLTranslationException(
+            "Error in SAS translation: ${e.message}.\n" +
+                    "PDDL Domain:\n$domain\n" +
+                    "PDDL Problem:\n$problem"
+        )
+    }
+    if (log != null) log("Translation done")
+
+    val result = try {
+        searchPlanFromSAS(sas, "astar(blind())")
+    } catch (e: Throwable) {
+        throw PDDLPlanningException(e.toString())
+    }
+    if (log != null) log("Raw planner result: $result")
     val (plan, _) = result.split(';')
     return plan.split("\n").map { line ->
         if (line.isEmpty())
             return@map null
-        assert(line.startsWith('('))
-        assert(line.endsWith(')'))
-        line.substring(1, line.length - 1)
-    }.filterNotNull().joinToString("\n")
+        if (!line.startsWith('(') || !line.endsWith(')')) {
+            error("Malformed line of plan result:\n$line\nIn:\n$result")
+        }
+        val task = line.substring(1, line.length - 1)
+        val taskArgs = task.split(' ').filter { it.isNotEmpty() }.map { it.trim() }
+        Task.create(*taskArgs.toTypedArray())
+    }.filterNotNull()
 }
 
 /**

@@ -6,6 +6,7 @@ import com.softbankrobotics.pddlplanning.PlanSearchFunction
 import com.softbankrobotics.pddlplanning.test.PlanningInstrumentedTest
 import com.softbankrobotics.pddlplanning.test.stringFromRawResourceName
 import com.softbankrobotics.python.ensurePythonInitialized
+import kotlinx.coroutines.runBlocking
 import org.junit.BeforeClass
 import org.junit.Test
 
@@ -151,7 +152,7 @@ class FastDownwardTest : PlanningInstrumentedTest {
         println("Domain:\n$domain")
         val problem = stringFromRawResourceName(context, "fast_downward_1_problem")
         println("Problem:\n$problem")
-        val plan = searchPlan(domain, problem)
+        val plan = runBlocking { searchPlan(domain, problem) { println(it) } }
         println("Plan:\n$plan")
     }
 
