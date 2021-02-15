@@ -16,7 +16,7 @@ that can be used along with the utilities provided by `com.softbankrobotics:pddl
 ## Usage as a stand-alone service
 
 To use it as a stand-alone Android service application:
-- build the `app` module, and install it on the device.
+- [build](#Building) the `app` module, and install it on the device.
   It will show up under the settings, in the applications section,
   but not in the main launcher app, because it has no main activity.
 - let your module depend on the PDDL Planning interface for Android:
@@ -30,6 +30,17 @@ To use it as a stand-alone Android service application:
   intent.`package` = "com.softbankrobotics.fastdownward"
   val searchPlan: PlanSearchFunction = createPlanSearchFunctionFromService(context, intent)
   ```
+
+## Building
+
+This project has submodules. After cloning it, do not forget to run:
+
+```sh
+git submodule update --init
+```
+
+This is a standard Android Studio project,
+but it includes C++ dependencies and might take long to build.
 
 ## License
 
