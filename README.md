@@ -16,7 +16,7 @@ that can be used along with the utilities provided by `com.softbankrobotics:pddl
 ## Usage as a stand-alone service
 
 To use it as a stand-alone Android service application:
-- [build](#Building) the `app` module, and install it on the device.
+- [build](#building) the `app` module, and install it on the device.
   It will show up under the settings, in the applications section,
   but not in the main launcher app, because it has no main activity.
 - let your module depend on the PDDL Planning interface for Android:
