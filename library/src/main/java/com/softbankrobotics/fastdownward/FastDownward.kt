@@ -9,7 +9,7 @@ import com.softbankrobotics.python.pythonIsInitialized
  * Sets up the environment for the Fast Downward planner,
  * and provides the corresponding plan search function.
  */
-fun setupFastDownwardPlanner(context: Context): PlanSearchFunction {
+fun setupFastDownwardPlanner(context: Context): PlanSearchFunction = synchronized(plannerLock) {
     ensurePythonInitialized(context)
     ensureFastDownwardIsLoaded()
     return ::searchPlanFastDownward
@@ -73,7 +73,7 @@ private var isFastDownwardLoaded = false
 /**
  * Makes sure the native library is loaded.
  */
-fun ensureFastDownwardIsLoaded() {
+fun ensureFastDownwardIsLoaded() = synchronized(plannerLock) {
     if (!isFastDownwardLoaded) {
         System.loadLibrary("fast-downward-jni")
         isFastDownwardLoaded = true
@@ -85,13 +85,13 @@ fun ensureFastDownwardIsLoaded() {
  * Requires initializePython to be called beforehand.
  */
 private external fun translatePDDLToSAS(domain: String, problem: String): String
-internal fun translatePDDLToSASInternal(domain: String, problem: String): String {
+internal fun translatePDDLToSASInternal(domain: String, problem: String): String = synchronized(plannerLock) {
     ensureFastDownwardIsLoaded()
     return translatePDDLToSAS(domain, problem)
 }
 
 private external fun searchPlanFromSAS(sas: String, strategy: String): String
-internal fun searchPlanFromSASInternal(sas: String, strategy: String): String {
+internal fun searchPlanFromSASInternal(sas: String, strategy: String): String = synchronized(plannerLock) {
     ensureFastDownwardIsLoaded()
     return searchPlanFromSAS(sas, strategy)
 }
