@@ -24,6 +24,8 @@ buildscript {
         // in the individual module build.gradle files
         classpath 'org.jetbrains.dokka:dokka-gradle-plugin:0.10.1'
         classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.4.1' // Crashlytics plugin
+        classpath 'com.google.firebase:perf-plugin:1.3.4'  // Performance Monitoring plugin
     }
 }
 
@@ -45,4 +47,29 @@ task clean(type: Delete) {
 
 static def getGitCommitHash() {
     'git rev-parse --verify --short HEAD'.execute().text.trim()
+}
+
+/**
+ * Gets a build option from the project's properties,
+ * or otherwise from an environment variable.
+ * @param optionName The name of the option to look for.
+ * @param defaultValue The default value to provide if the option is not found.
+ * @return The value of the option, or the default value otherwise.
+ */
+String getOption(String optionName, String defaultValue = "") {
+    return getOptionAlternate(optionName, optionName, defaultValue)
+}
+
+/**
+ * Gets a build option from the project's properties,
+ * or otherwise from an environment variable.
+ * @param optionName The name of the option to look for.
+ * @param alternateOptionName An alternate name of the option check environment variable.
+ * @param defaultValue The default value to provide if the option is not found.
+ * @return The value of the option, or the default value otherwise.
+ */
+String getOptionAlternate(String optionName, String alternateOptionName, String defaultValue = "") {
+    return project.findProperty(optionName)?.toString()
+            ?: System.getenv(alternateOptionName)
+            ?: defaultValue
 }

@@ -30,6 +30,13 @@ node("android-build-jdk8") {
                 string(credentialsId: 'keystorePasswordAndroid', variable: 'KEYSTORE_PASSWORD'),
                 string(credentialsId: 'keystoreAliasSample', variable: 'KEYSTORE_ALIAS'),
                 string(credentialsId: 'aliasPasswordSample', variable: 'ALIAS_PASSWORD'),
+
+                string(credentialsId: 'fastDownwardFirebaseProjectID', variable: 'fastDownwardFirebaseProjectID'),
+                string(credentialsId: 'fastDownwardFirebaseGoogleAppID', variable: 'fastDownwardFirebaseGoogleAppID'),
+                string(credentialsId: 'fastDownwardFirebaseWebClientID', variable: 'fastDownwardFirebaseWebClientID'),
+                string(credentialsId: 'fastDownwardFirebaseGCMSenderID', variable: 'fastDownwardFirebaseGCMSenderID'),
+                string(credentialsId: 'fastDownwardFirebaseGoogleAPIKey', variable: 'fastDownwardFirebaseGoogleAPIKey'),
+                string(credentialsId: 'fastDownwardFirebaseCrashlyticsAPIKey', variable: 'fastDownwardFirebaseCrashlyticsAPIKey'),
         ]) {
             for (abi in abis) {
                 echo "Compiling app for ($abi)..."
