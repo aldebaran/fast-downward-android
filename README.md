@@ -18,7 +18,7 @@ allprojects {
 }
 ```
 
-## Usage as a library
+### Usage as a library
 
 Make your module depend on it:
 ```groovy
@@ -27,7 +27,7 @@ implementation 'com.softbankrobotics.pddl:fast-downward-android:2.2.0'
 Use `setupFastDownwardPlanner` to get a `PlanSearchFunction`,
 that can be used along with the utilities provided by `com.softbankrobotics:pddl-planning`.
 
-## Usage as a stand-alone service
+### Usage as a stand-alone service
 
 To use it as a stand-alone Android service application:
 - [build](#building) the `app` module, and install it on the device.
