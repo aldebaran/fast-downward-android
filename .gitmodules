@@ -3,4 +3,4 @@
 	url = git@gitlab.aldebaran.lan:life/python-cmake-buildsystem.git
 [submodule "library/fast-downward"]
 	path = library/fast-downward
-	url = git@gitlab.aldebaran.lan:life/fast-downward.git
+	url = git@github.com:aldebaran/downward.git
