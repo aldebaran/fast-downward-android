@@ -5,13 +5,13 @@ apply from: "$rootDir/gradle/deploy.gradle"
 apply from: "$rootDir/gradle/quality.gradle"
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
     ndkVersion "$ndk_version"
 
     defaultConfig {
         minSdkVersion 23
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode getProperty("VERSION_CODE") as Integer
         versionName getProperty("VERSION_NAME") as String
         def artifactId = getProperty("POM_ARTIFACT_ID") as String
