@@ -7,7 +7,11 @@ This project implements the interface provided by the library
 
 ## Usage
 
-The library and its dependencies are publicly available on Maven Central, but **not** in JCenter.
+This planner can be used as a library, or as an Android service, in a stand-alone app.
+In both cases you will need to use the interface library
+[`com.softbankrobotics.pddl:pddl-planning`](https://github.com/aldebaran/pddl-planning-android).
+
+It is available on Maven Central, but **not** in JCenter.
 The `build.gradle` at the root of your project should mention:
 
 ```groovy
@@ -18,14 +22,26 @@ allprojects {
 }
 ```
 
+And your module's dependency should include:
+```groovy
+implementation 'com.softbankrobotics.pddl:pddl-planning:1.4.0'
+```
+
 ### Usage as a library
 
-Make your module depend on it:
+Add it to your module's dependencies:
 ```groovy
 implementation 'com.softbankrobotics.pddl:fast-downward-android:2.2.0'
 ```
 Use `setupFastDownwardPlanner` to get a `PlanSearchFunction`,
 that can be used along with the utilities provided by `com.softbankrobotics:pddl-planning`.
+
+Example:
+```kotlin
+val searchPlan: PlanSearchFunction = setupFastDownwardPlanner(context)
+// [...]
+searchPlan(domain, problem)
+```
 
 ### Usage as a stand-alone service
 
@@ -33,16 +49,14 @@ To use it as a stand-alone Android service application:
 - [build](#building) the `app` module, and install it on the device.
   It will show up under the settings, in the applications section,
   but not in the main launcher app, because it has no main activity.
-- let your module depend on the PDDL Planning interface for Android:
-  ```groovy
-  implementation 'com.softbankrobotics.pddl:pddl-planning:1.4.0'
-  ```
 - use `createPlanSearchFunctionFromService` with the right `Intent` to target this app's service
   to get a `PlanSearchFunction`:
   ```kotlin
   val intent = Intent(ACTION_SEARCH_PLANS_FROM_PDDL)
   intent.`package` = "com.softbankrobotics.fastdownward"
   val searchPlan: PlanSearchFunction = createPlanSearchFunctionFromService(context, intent)
+  // [...]
+  searchPlan(domain, problem)
   ```
 
 ## Building
