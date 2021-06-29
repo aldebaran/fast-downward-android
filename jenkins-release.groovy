@@ -10,18 +10,6 @@ node("android-build-jdk8") {
     stage('Compile Library') {
         sh './gradlew :library:assembleRelease'
         archiveArtifacts '**/*.aar'
-        withCredentials([
-                usernamePassword(credentialsId: 'nexusDeployerAccount',
-                        passwordVariable: 'NEXUS_PASSWORD',
-                        usernameVariable: 'NEXUS_USER')
-        ]) {
-            if (env.BRANCH_NAME == "develop") {
-                BUILD_TYPE = "SNAPSHOT"
-            } else {
-                BUILD_TYPE = "RELEASE"
-            }
-            sh "./gradlew -DNEXUS_PASSWORD=$NEXUS_PASSWORD -DNEXUS_USER=$NEXUS_USER -DBUILD=$BUILD_TYPE :library:uploadArchives"
-        }
     }
 
     stage('Compile Application') {
