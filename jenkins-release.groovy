@@ -39,16 +39,27 @@ node("android-build-jdk8") {
                 string(credentialsId: 'fastDownwardFirebaseCrashlyticsAPIKey', variable: 'fastDownwardFirebaseCrashlyticsAPIKey'),
         ]) {
             for (abi in abis) {
-                echo "Compiling app for ($abi)..."
+                echo "Compiling split APK for $abi..."
                 sh "./gradlew :app:assembleRelease -PABIS=$abi"
 
                 // KLUDGE: by building it twice, we make sure the asset python-modules.zip is found
-                echo "Recompiling app for ($abi)..."
+                echo "Recompiling split APK for $abi..."
                 sh "./gradlew :app:assembleRelease -PABIS=$abi"
 
-                echo "Archiving app for ($abi)..."
+                echo "Archiving split APK for $abi..."
                 archiveArtifacts "**/*-$abi-*.apk"
             }
+
+            // Also build the universal APK
+            echo "Compiling universal APK for $abis..."
+            sh "./gradlew :app:assembleRelease -PABIS=\"${abis.join(';')}\""
+
+            // KLUDGE: by building it twice, we make sure the asset python-modules.zip is found
+            echo "Recompiling universal APK for $abis..."
+            sh "./gradlew :app:assembleRelease -PABIS=\"${abis.join(';')}\""
+
+            echo "Archiving universal APK for $abis..."
+            archiveArtifacts "**/*.apk"
         }
     }
 }

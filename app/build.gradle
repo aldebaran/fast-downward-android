@@ -84,7 +84,7 @@ android {
             include(abis)
 
             // Specifies that we do not want to also generate a universal APK that includes all ABIs.
-            universalApk false
+            universalApk true
         }
     }
 }
