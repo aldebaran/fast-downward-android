@@ -1,6 +1,6 @@
 [submodule "library/python-cmake-buildsystem"]
 	path = library/python-cmake-buildsystem
-	url = git@github.com:aldebaran/python-cmake-buildsystem.git
+	url = https://github.com/aldebaran/python-cmake-buildsystem.git
 [submodule "library/fast-downward"]
 	path = library/fast-downward
-	url = git@github.com:aldebaran/downward.git
+	url = https://github.com/aldebaran/downward.git
