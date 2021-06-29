@@ -1,6 +1,6 @@
 @Library('pipeline-library') _
 
-abis = ['armeabi-v7a', 'x86', 'x86_64']
+abis = ['armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64']
 
 // Sets up the environment to build Android projects.
 node("android-build-jdk8") {

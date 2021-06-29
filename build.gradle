@@ -9,7 +9,7 @@ buildscript {
         ndk_version = '21.3.6528147'
 
         // Compile preferred ABIs, or by default, respectively for VM, Desktop, Pepper
-        abis = ((project.findProperty("ABIS") as String) ?: "x86;x86_64;armeabi-v7a").split(';')
+        abis = ((project.findProperty("ABIS") as String) ?: "x86;x86_64;armeabi-v7a;arm64-v8a").split(';')
         println "Configuring project for ABIS: $abis"
     }
 
