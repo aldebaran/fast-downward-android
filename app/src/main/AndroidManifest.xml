@@ -13,7 +13,8 @@
 
         <service
             android:name=".PlannerService"
-            android:exported="true">
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE">
             <intent-filter>
                 <action android:name="com.softbankrobotics.planning.action.SEARCH_PLANS_FROM_PDDL" />
                 <category android:name="android.intent.category.DEFAULT" />
