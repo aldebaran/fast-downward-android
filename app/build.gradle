@@ -6,7 +6,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "com.softbankrobotics.pddl.fastdownward"
+        applicationId "com.softbankrobotics.fastdownward"
         minSdkVersion 23
         targetSdkVersion 30
         versionCode getProperty("VERSION_CODE") as Integer
