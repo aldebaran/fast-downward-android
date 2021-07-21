@@ -35,10 +35,21 @@ jobs:
       env:
         ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
-    - name: Publish library to Maven Central
+    - name: Publish library (.aar) to Maven Central
       run: ./gradlew "-PsigningInMemoryKey=${{ secrets.ARTIFACT_SIGNING_KEY }}" "-PsigningInMemoryKeyPassword=${{ secrets.ARTIFACT_SIGNING_PASSWORD }}" "-PmavenCentralUsername=${{ secrets.MAVEN_CENTRAL_USERNAME }}" "-PmavenCentralPassword=${{ secrets.MAVEN_CENTRAL_PASSWORD }}" :library:publish --stacktrace
       env:
         ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+    - uses: r0adkll/sign-android-release@v1
+      name: Sign app APK
+      # ID used to access action output
+      id: sign_app
+      with:
+        releaseDirectory: app/build/outputs/apk/release
+        signingKeyBase64: ${{ secrets.APPLICATION_SIGNING_KEY_STORE }}
+        keyStorePassword: ${{ secrets.APPLICATION_SIGNING_KEY_STORE_PASSWORD }}
+        alias: ${{ secrets.APPLICATION_SIGNING_KEY_STORE_ALIAS }}
+        keyPassword: ${{ secrets.APPLICATION_SIGNING_KEY_STORE_ALIAS_PASSWORD }}
 
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:

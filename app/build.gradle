@@ -52,18 +52,8 @@ android {
         jvmTarget = "1.8"
     }
 
-    signingConfigs {
-        fromEnv {
-            keyAlias "${System.getenv('KEYSTORE_ALIAS')}"
-            keyPassword "${System.getenv('ALIAS_PASSWORD')}"
-            storeFile file("${System.getenv('KEYSTORE_FILE')}")
-            storePassword "${System.getenv('KEYSTORE_PASSWORD')}"
-        }
-    }
-
     buildTypes {
         release {
-            signingConfig signingConfigs.fromEnv
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
