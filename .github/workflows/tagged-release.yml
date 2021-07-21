@@ -58,5 +58,5 @@ jobs:
         files: |
           LICENSE
           library/build/outputs/aar/*.aar
-          library/build/outputs/apk/*.apk
+          app/build/outputs/apk/release/*.apk
       id: "automatic_releases"
