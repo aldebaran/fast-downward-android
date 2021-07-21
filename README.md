@@ -24,7 +24,7 @@ allprojects {
 
 And your module's dependency should include:
 ```groovy
-implementation 'com.softbankrobotics.pddl:pddl-planning:1.4.0'
+implementation 'com.softbankrobotics.pddl:pddl-planning:1.4.1'
 ```
 
 ### Usage as a library
