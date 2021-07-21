@@ -30,8 +30,13 @@ jobs:
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-    - name: Build with Gradle
+    - name: Build all with Gradle
       run: ./gradlew assembleRelease
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+    - name: Publish library to Maven Central
+      run: ./gradlew "-PsigningInMemoryKey=${{ secrets.ARTIFACT_SIGNING_KEY }}" "-PsigningInMemoryKeyPassword=${{ secrets.ARTIFACT_SIGNING_PASSWORD }}" "-PmavenCentralUsername=${{ secrets.MAVEN_CENTRAL_USERNAME }}" "-PmavenCentralPassword=${{ secrets.MAVEN_CENTRAL_PASSWORD }}" :library:publish --stacktrace
       env:
         ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
