@@ -13,8 +13,6 @@ android {
     defaultConfig {
         minSdkVersion 23
         targetSdkVersion 30
-        versionCode getProperty("VERSION_CODE") as Integer
-        versionName getProperty("VERSION_NAME") as String
         def artifactId = getProperty("POM_ARTIFACT_ID") as String
         def buildId = getGitCommitHash()
         archivesBaseName = "$artifactId-$versionName-$buildId"
