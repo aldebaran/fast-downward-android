@@ -76,3 +76,6 @@ but it includes C++ dependencies and might take long to build.
 ## License
 
 This project is distributed under the [GPLv3 license](LICENSE).
+
+[Derivative logo was authorized for this project](https://groups.google.com/g/fast-downward/c/hqRYW82xrGQ/m/gInyi_mLDgAJ?pli=1),
+please contact Fast Downward for reuse.
