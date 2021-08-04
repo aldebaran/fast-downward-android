@@ -1,6 +1,6 @@
 # Fast Downward for Android
 
-![](https://img.shields.io/maven-central/v/com.softbankrobotics.pddl/fast-downward "latest version on Maven Central")
+![](https://img.shields.io/maven-central/v/com.softbankrobotics.pddl/fast-downward-android "latest version on Maven Central")
 ![](https://img.shields.io/github/workflow/status/aldebaran/fast-downward-android/Android%20CI "master build state")
 
 This is a port of the [Fast Downward PDDL Planner](http://www.fast-downward.org/) for Android.
